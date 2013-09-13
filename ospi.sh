@@ -1,13 +1,13 @@
-﻿#! /bin/sh
+#! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          ospi
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Open Sprinkler Raspberry Pi
-# Description:       Open Sprinkler Raspberry Pi - Raspberry Pi with
-#                    Open Sprinkler base board from Ray's Hobby
+# Short-Description: OpenSprinkler + Raspberry Pi
+# Description:       OpenSprinkler + Raspberry Pi - Raspberry Pi with
+#                    OpenSprinkler Pi board from Ray's Hobby
 ### END INIT INFO
 
 #
@@ -29,13 +29,11 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="Open Sprinkler Raspberry Pi"
-HOST=$(hostname -I | sed 's/ *$//g')
-PORT=:80 # Edit if different on your system 
+DESC="OpenSprinkler Raspberry Pi"
 NAME=ospi.py
 DAEMON=/usr/bin/python
-DAEMON_ARGS="ospi.py $HOST$PORT"
-HOMEDIR=/home/pi/OSPi/ # Edit if different on your system 
+DAEMON_ARGS="ospi.py"
+HOMEDIR=/home/pi/OSPi/ # Edit if different on your Raspberry Pi
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
