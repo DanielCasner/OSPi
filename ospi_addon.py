@@ -3,7 +3,7 @@ import ospi
 import subprocess
 
   #### Add any new page urls here ####
-ospi.urls.extend(['/dht', 'ospi_addon.dht', '/uptime', 'ospi_addon.uptime'])
+ospi.urls.extend(['/uptime', 'ospi_addon.uptime'])
 
 ##print ospi.urls # for testing
 
@@ -17,16 +17,6 @@ ospi.urls.extend(['/dht', 'ospi_addon.dht', '/uptime', 'ospi_addon.uptime'])
 ##      #Insert Custom Code here.
 ##      return custpg
 
-
-class dht:
-   """Add description here"""
-   def GET(self):
-      custpg = '<!DOCTYPE html>\n<html>\n<body>\n<pre>\n'
-      p = subprocess.Popen(['Adafruit_DHT', '11', '24'], stdout=subprocess.PIPE)
-      p.wait()
-      custpg += p.communicate()[0]
-      custpg += '\n</pre>\n</body>\n</html>\n'
-      return custpg
 
 class uptime:
    """Add description here"""
