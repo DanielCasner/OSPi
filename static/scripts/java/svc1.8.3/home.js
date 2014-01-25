@@ -32,6 +32,11 @@ if(ver>=100) w("<b>Firmware version</b>: "+(ver/100>>0)+"."+((ver/10>>0)%10)+"."
 else w("<b>Firmware version</b>: "+(ver/10>>0)+"."+(ver%10)+"<br>");
 w("<b>Device time</b>: "+datestr(devt*1000)+"<br>");
 
+// ROS stuff
+if (ros == 1) {
+    w("<b>Outside temperature</b>: <span id='outside_temp' onmouseover='bluebg(this)' onmouseout='nobg(this)' style='cursor:pointer' onclick='toggle(tt)' title='Click to toggle Celsius <> Fahrenheit'>"+outside_temp+"&deg;"+tempunit+"</span>");
+    w("<b>Outside humidity</b>: " + outside_humidity + "%");
+}
 //if (typeof cputemp === 'undefined') cputemp="";
 if ((typeof cputemp !== 'undefined') && cputemp !== 0.0) {
 w("<b>CPU Temp</b>: <span id='heat' onmouseover='bluebg(this)' onmouseout='nobg(this)' style='cursor:pointer' onclick='toggle(tt)' title='Click to toggle Celsius <> Fahrenheit'>"+cputemp+"&deg;"+tempunit+"</span><hr>");

@@ -22,6 +22,14 @@ except ImportError:
     except ImportError:
         print 'No GPIO module was loaded'
         pass
+try:
+    import rospy
+    from std_msgs.msg import Float32
+except:
+    gv.ros = True
+else:
+    gv.ros = False
+
     
 web.config.debug = False      
 
@@ -404,6 +412,27 @@ def output_prog():
         progstr += 'pd['+str(i)+']='+str(pro).replace(' ', '')+';'
     return progstr      
 
+
+    #####  ROS inputs  #####
+def outside_temperature_callback(msg):
+    gv.outside_temperature = msg.data
+    if gv.outside_temperature < 1.5: # If below 1.5C
+        gv.pd[0][0] = 1 # Enable program 0
+    else: # If warm enough
+        gv.pd[0][0] = 0 # Disable program 0
+
+def outside_humidity_callback(msg):
+    gv.outside_humidity = msg.data
+
+gv.outside_temperature = float("NaN")
+gv.outside_humidity = float("NaN")
+
+if gv.ros is True:
+    rospy.init_node('OSPi')
+    rospy.Subscriber('temperature', Float32, outside_temperature_callback)
+    rospy.Subscriber('humidity', Float32, outside_humidity_callback)
+
+
     #####  GPIO  #####
 def set_output():
     """Activate triacs according to shift register state."""
@@ -441,7 +470,7 @@ try:
             gv.sd[key] = sd_temp[key]
 except IOError: # If file does not exist, it will be created created using defaults.
     sdf = open('./data/sd.json', 'w') # save file
-    json.dump(gv.sd, sdf)
+     json.dump(gv.sd, sdf)
     sdf.close()
 
 gv.now = time.time()+((gv.sd['tz']/4)-12)*3600
@@ -566,11 +595,17 @@ class home:
               homepg += '<script>var cputemp='+str(9.0/5.0*int(float(CPU_temperature()))+32)+'; var tempunit="F";</script>\n'
             except ValueError:
                pass
+           outside_temp = 1.8*gv.outside_temperature+32.0
         else:
             try:
                 homepg += '<script>var cputemp='+str(float(CPU_temperature()))+'; var tempunit="C";</script>\n'            
             except ValueError:
                 pass
+            outside_temp = gv.outside_temperature
+        if gv.ros:
+            homepg += '<script>var ros=1; var outside_temp=%f; var outside_humidity=%f;</script>' % (outside_temp, gv.outside_humidity)
+        else:
+            homepg += "<script>var ros=0;</script>"
         homepg += '<script src=\"'+baseurl()+'/static/scripts/java/svc1.8.3/home.js\"></script>'
         return homepg
 
