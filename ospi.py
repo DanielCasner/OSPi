@@ -423,6 +423,10 @@ def outside_temperature_callback(msg):
 
 def outside_humidity_callback(msg):
     gv.outside_humidity = msg.data
+    if gv.outside_humidity > 50:
+        gv.sd['wl'] = 100-gv.outside_humidity
+    elif gv.outside_temperature > 30.0:
+        gv.sd['wl'] = 150-gv.outside_humidity
 
 gv.outside_temperature = float("NaN")
 gv.outside_humidity = float("NaN")
