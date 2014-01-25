@@ -26,9 +26,9 @@ try:
     import rospy
     from std_msgs.msg import Float32
 except:
-    gv.ros = True
-else:
     gv.ros = False
+else:
+    gv.ros = True
 
     
 web.config.debug = False      
@@ -470,7 +470,7 @@ try:
             gv.sd[key] = sd_temp[key]
 except IOError: # If file does not exist, it will be created created using defaults.
     sdf = open('./data/sd.json', 'w') # save file
-     json.dump(gv.sd, sdf)
+    json.dump(gv.sd, sdf)
     sdf.close()
 
 gv.now = time.time()+((gv.sd['tz']/4)-12)*3600
@@ -595,7 +595,7 @@ class home:
               homepg += '<script>var cputemp='+str(9.0/5.0*int(float(CPU_temperature()))+32)+'; var tempunit="F";</script>\n'
             except ValueError:
                pass
-           outside_temp = 1.8*gv.outside_temperature+32.0
+            outside_temp = 1.8*gv.outside_temperature+32.0
         else:
             try:
                 homepg += '<script>var cputemp='+str(float(CPU_temperature()))+'; var tempunit="C";</script>\n'            
