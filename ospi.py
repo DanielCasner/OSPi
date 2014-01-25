@@ -1054,9 +1054,9 @@ class OSPi_app(web.application):
 
 if __name__ == '__main__':
     app = OSPi_app(urls, globals())
-    if False and gv.ros is True:
+    thread.start_new_thread(timing_loop, ())
+    if gv.ros is True:
         rospy.init_node('OSPi')
         rospy.Subscriber('temperature', Float32, outside_temperature_callback)
         rospy.Subscriber('humidity', Float32, outside_humidity_callback)
-    thread.start_new_thread(timing_loop, ())
     app.run()

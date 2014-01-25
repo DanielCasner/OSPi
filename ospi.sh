@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 ### BEGIN INIT INFO
 # Provides:          ospi
 # Required-Start:    $remote_fs $syslog
@@ -29,6 +29,7 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
+source /opt/ros/hydro/setup.bash
 DESC="OpenSprinkler Raspberry Pi"
 NAME=ospi.py
 DAEMON=/usr/bin/python
