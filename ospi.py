@@ -423,7 +423,7 @@ def outside_temperature_callback(msg):
 
 def outside_humidity_callback(msg):
     gv.outside_humidity = msg.data
-    if gv.outside_humidity > 50:
+    if gv.outside_humidity > 40:
         gv.sd['wl'] = 100-int(gv.outside_humidity)
     elif gv.outside_temperature > 30.0:
         gv.sd['wl'] = 150-int(gv.outside_humidity)
