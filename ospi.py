@@ -167,10 +167,13 @@ def prog_match(prog):
         return 1 # Program matched
     return 0
 
-def schedule_stations(stations):
+def schedule_stations(stations, ignore_rain=False):
     """Schedule stattions/valves/zones to run."""
-    if gv.sd['rd'] or (gv.sd['urs'] and gv.sd['rs']): # If rain delay or rain detected by sensor
-        rain = True
+    if ignore_rain:
+        if gv.sd['rd'] or (gv.sd['urs'] and gv.sd['rs']): # If rain delay or rain detected by sensor
+            rain = True
+        else:
+            rain = False
     else:
         rain = False
     accumulate_time = gv.now
@@ -872,7 +875,7 @@ class change_runonce:
                 gv.ps[i][0] = 98
                 gv.ps[i][1] = v
                 stations[i/8] += 2**(i%8)
-        schedule_stations(stations)
+        schedule_stations(stations, ignore_rain=True)
         raise web.seeother('/')
 
 class view_programs:
@@ -1028,7 +1031,7 @@ class run_now:
                     gv.rs[sid][3] = pid+1 # store program number in schedule
                     gv.ps[sid][0] = pid+1 # store program number for display
                     gv.ps[sid][1] = gv.rs[sid][2] # duration
-        schedule_stations(p[7:7+gv.sd['nbrd']])
+        schedule_stations(p[7:7+gv.sd['nbrd']], ignore_rain=True)
         raise web.seeother('/')
 
 class show_revision:
