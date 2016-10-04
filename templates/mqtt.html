@@ -1,0 +1,58 @@
+$def with(settings, client_id)
+<!-- Edit: Replace "proto_vals" with settings values for your plugin if used-->
+
+$var title: $_('SIP MQTT Plugin') <!--Edit: Title to show on browser tab-->
+$var page: mqtt_plugin  <!--Edit: page name, used internally-->
+<script>
+
+    // Initialize behaviors
+    jQuery(document).ready(function(){
+
+        jQuery("#cSubmit").click(function() {
+            jQuery("#pluginForm").submit();
+        });
+        jQuery("button#cCancel").click(function(){
+            window.location= baseUrl + "/";
+        });
+    });
+</script>
+
+<div id="plugin">
+    <div class="title">MQTT Plugin  <!--Edit: User page heading, Make relevant to your plugin-->
+    <p>MQTT plugin adds an MQTT client to the SIP daemon for other plugins to use to publish information and / or
+      receive commands over MQTT. On this page, the shared client is configured.</p>
+    <p>Having a shared MQTT client simplifies configuration and lowers overhead on the SIP process, network and broker.
+    </p>
+    </div>
+    
+    <form id="pluginForm" action="${app_path('/mqtt-save')}" method="get"> <!--Edit: Replace "proto-save" with URL of plugin's class for saving settings-->
+
+        <table class="optionList">
+
+            <!--Text fields-->
+            <thead>
+                <th class="stationNumber">$_('Heading')</th>  <!--Edit: Optional-->
+                <th class="stationNumber">$_('Heading')</th>  <!--Edit: Optional-->
+            </thead>
+
+            <tr>
+                <td style='text-transform: none;'>$_('MQTT Broker Host'):</td>  <!--Edit-->
+                <td><input type="text" name="broker_host" value="${settings['broker_host']}"></td>
+            </tr>
+            <tr>
+                <td style='text-transform: none;'>$_('MQTT Broker Port'):</td>  <!--Edit-->
+                <td><input type="text" name="broker_port" value="${settings['broker_port']}"></td>
+            </tr>
+            <tr>
+                <td style='text-transform: none;'>$_('MQTT Client ID'):</td>  <!--Edit-->
+                <td>$_(client_id)</td>
+            </tr>
+        </table>
+
+    </form>
+
+<div id="controls">
+    <button id="cSubmit" class="submit"><b>$_('Submit')</b></button>
+    <button id="cCancel" class="cancel danger">$_('Cancel')</button>
+</div>
+</div>

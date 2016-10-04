@@ -1,0 +1,8 @@
+A plugin which adds a shared MQTT client to SIP
+
+##### List all plugin files below preceded by a blank line [file_name.ext path] relative to OSPi directory #####
+
+mqtt.py plugins
+mqtt.html templates
+mqtt.json data (generated)
+mqtt.manifest plugins/manifests
