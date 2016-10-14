@@ -45,7 +45,7 @@ class settings(ProtectedPage):
                 'broker_port': 1883,
                 'publish_up_down': ''
             }  # Default settings. can be list, dictionary, etc.
-        return template_render.proto(settings, gv.sd[u'name'], NO_MQTT_ERROR if mqtt is None else "")  # open settings page
+        return template_render.mqtt(settings, gv.sd[u'name'], NO_MQTT_ERROR if mqtt is None else "")  # open settings page
 
 class save_settings(ProtectedPage):
     """Save user input to json file.
