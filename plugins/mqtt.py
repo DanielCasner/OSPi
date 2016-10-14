@@ -12,7 +12,12 @@ from sip import template_render  #  Needed for working with web.py templates
 from webpages import ProtectedPage  # Needed for security
 from blinker import signal
 import json  # for working with data file
-import paho.mqtt.client as mqtt
+try:
+    import paho.mqtt as mqtt
+except ImportError:
+    print("ERROR: MQTT Plugin requires paho mqtt.")
+    print("\ttry: pip install paho-mqtt")
+    mqtt = None
 
 DATA_FILE = "./data/mqtt.json"
 
@@ -23,6 +28,9 @@ urls.extend([
     '/mqtt-sp', 'plugins.mqtt.settings',
     '/mqtt-save', 'plugins.mqtt.save_settings'
     ])
+gv.plugin_menu.append(['MQTT', '/mqtt-sp'])
+
+NO_MQTT_ERROR = "MQTT plugin requires paho mqtt python library. On the command line run `pip install paho-mqtt` and restart SIP to get it."
 
 class settings(ProtectedPage):
     """Load an html page for entering plugin settings.
@@ -37,7 +45,7 @@ class settings(ProtectedPage):
                 'broker_port': 1883,
                 'publish_up_down': ''
             }  # Default settings. can be list, dictionary, etc.
-        return template_render.proto(settings, gv.sd[u'name'], "")  # open settings page
+        return template_render.proto(settings, gv.sd[u'name'], NO_MQTT_ERROR if mqtt is None else "")  # open settings page
 
 class save_settings(ProtectedPage):
     """Save user input to json file.
@@ -59,7 +67,7 @@ class save_settings(ProtectedPage):
         raise web.seeother('/')  # Return user to home page.
 
 def get_client():
-    if _client is None:
+    if _client is None and mqtt is not None:
         try:
             with json.load(open(DATA_FILE, 'r')) as settings:
                 try:
