@@ -57,11 +57,11 @@ class save_settings(ProtectedPage):
         qdict = web.input()  # Dictionary of values returned as query string from settings page.
         with open(DATA_FILE, 'w') as f:  # Edit: change name of json file
             try:
-                port = int(qdic['broker_port'])
+                port = int(qdict['broker_port'])
                 assert port > 80 and port < 65535
-                qdic['broker_port'] = port
+                qdict['broker_port'] = port
             except:
-                return template_render.proto(qdic, gv.sd[u'name'], "Broker port must be a valid integer port number")
+                return template_render.proto(qdict, gv.sd[u'name'], "Broker port must be a valid integer port number")
             else:
                 json.dump(qdict, f) # save to file
         raise web.seeother('/')  # Return user to home page.

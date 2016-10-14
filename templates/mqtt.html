@@ -18,7 +18,8 @@ $var page: mqtt_plugin  <!--Edit: page name, used internally-->
 </script>
 
 <div id="plugin">
-    <div class="title">MQTT Plugin  <!--Edit: User page heading, Make relevant to your plugin-->
+    <div class="title">MQTT Plugin</div>
+    <div>
     <p>MQTT plugin adds an MQTT client to the SIP daemon for other plugins to use to publish information and / or
       receive commands over MQTT. On this page, the shared client is configured.</p>
     <p>Having a shared MQTT client simplifies configuration and lowers overhead on the SIP process, network and broker.
@@ -32,11 +33,6 @@ $var page: mqtt_plugin  <!--Edit: page name, used internally-->
         <table class="optionList">
 
             <!--Text fields-->
-            <thead>
-                <th class="stationNumber">$_('Heading')</th>  <!--Edit: Optional-->
-                <th class="stationNumber">$_('Heading')</th>  <!--Edit: Optional-->
-            </thead>
-
             <tr>
                 <td style='text-transform: none;'>$_('MQTT Broker Host'):</td>
                 <td><input type="text" name="broker_host" value="${settings['broker_host']}"></td>
