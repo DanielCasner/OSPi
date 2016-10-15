@@ -15,10 +15,10 @@ from plugins import mqtt
 
 # Add new URLs to access classes in this plugin.
 urls.extend([
-    '/mqtt-zones-sp', 'plugins.mqtt-zones.settings',
-    '/mqtt-zones-save', 'plugins.mqtt-zones.save_settings'
+    '/zone2mqtt-sp', 'plugins.mqtt_zones.settings',
+    '/zone2mqtt-save', 'plugins.mqtt_zones.save_settings'
     ])
-gv.plugin_menu.append(['MQTT Zones', '/mqtt-zones-sp'])
+gv.plugin_menu.append(['MQTT zone broadcaster', '/zone2mqtt-sp'])
 
 class settings(ProtectedPage):
     """Load an html page for entering plugin settings.
@@ -26,7 +26,7 @@ class settings(ProtectedPage):
     def GET(self):
         settings = mqtt.get_settings()
         zone_topic = settings.get('zone_topic', gv.sd[u'name'] + '/zones')
-        return template_render.mqtt(settings, "")  # open settings page
+        return template_render.mqtt_zones(zone_topic, "")  # open settings page
 
 class save_settings(ProtectedPage):
     """Save user input to json file.
@@ -43,7 +43,20 @@ class save_settings(ProtectedPage):
 
 ### valves ###
 def notify_zone_change(name, **kw):
-    print("MQTT Zones:", gv.srvals) #  This shows the state of the zones.
+    names = gv.snames
+    mas = gv.sd['mas']
+    vals = gv.srvals
+    payload = {
+        'zone_list': vals,
+        'zone_dict': {name: status for name, status in zip(names, vals)}
+        'master_on': 0 if mas == 0 else vals[mas]
+    }
+    print("MQTT Zones:", payload) #  This shows the state of the zones.
+    zone_topic = mqtt.get_settings.get('zone_topic')
+    if zone_topic:
+        client = mqtt.get_client()
+        if client:
+            client.publish(zone_topic, json.dumps(payload), qos=1, retain=True)
 
 zones = signal('zone_change')
 zones.connect(notify_zone_change)
