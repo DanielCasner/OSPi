@@ -27,6 +27,7 @@ _settings = {
     'broker_port': 1883,
     'publish_up_down': ''
 }
+_subscriptions = {}
 
 # Add new URLs to access classes in this plugin.
 urls.extend([
@@ -78,11 +79,21 @@ def get_settings():
         print("MQTT Plugin couldn't open data file:", e)
     return _settings
 
+def on_message(client, userdata, msg):
+    "Callback for MQTT data recieved"
+    global _subscriptions
+    if not msg.topic in _subscriptions:
+        print("MQTT plugin got unexpected message on topic:", msg.topic)
+    else:
+        for cb in _subscriptions[msg.topic]:
+            cb(client, msg)
+
 def get_client():
     global _client
     if _client is None and mqtt is not None:
         try:
             _client = mqtt.Client(gv.sd[u'name']) # Use system name as client ID
+            _client.on_message = on_message
             _client.connect(_settings['broker_host'], _settings['broker_port'])
             if _settings['publish_up_down']:
                 _client.will_set(_settings['publish_up_down'], json.dumps("DIED"), qos=1, retain=True)
@@ -98,6 +109,17 @@ def publish_status(status="UP"):
         client = get_client()
         if client:
             client.publish(_settings['publish_up_down'], json.dumps(status), qos=1, retain=True)
+
+def subscribe(topic, callback, qos=0):
+    "Subscribes to a topic with the given callback"
+    global _subscriptions
+    client = get_client()
+    if client:
+        if topic not in _subscriptions:
+            _subscriptions[topic] = [callback]
+            client.subscribe(topic, qos)
+        else:
+            _subscriptions[topic].append(callback)
 
 def on_restart():
     global _client

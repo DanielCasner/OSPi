@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 from __future__ import print_function
-""" SIP plugin uses mqtt plugin to broadcast station status every time it changes.
+""" SIP plugin uses mqtt plugin to receive run once program commands over MQTT
 """
 __author__ = "Daniel Casner <daniel@danielcasner.org>"
 
@@ -15,17 +15,17 @@ from plugins import mqtt
 
 # Add new URLs to access classes in this plugin.
 urls.extend([
-    '/zone2mqtt-sp', 'plugins.mqtt_zones.settings',
-    '/zone2mqtt-save', 'plugins.mqtt_zones.save_settings'
+    '/mr1-sp', 'plugins.mqtt_schedule.settings',
+    '/mr1-save', 'plugins.mqtt_schedule.save_settings'
     ])
-gv.plugin_menu.append(['MQTT zone broadcaster', '/zone2mqtt-sp'])
+gv.plugin_menu.append(['MQTT scheduler', '/mr1-sp'])
 
 class settings(ProtectedPage):
     """Load an html page for entering plugin settings.
     """
     def GET(self):
         settings = mqtt.get_settings()
-        zone_topic = settings.get('zone_topic', gv.sd[u'name'] + '/zones')
+        zone_topic = settings.get('schedule_topic', gv.sd[u'name'] + '/schedule')
         return template_render.mqtt_zones(zone_topic, "")  # open settings page
 
 class save_settings(ProtectedPage):
@@ -39,23 +39,17 @@ class save_settings(ProtectedPage):
         settings.update(qdict)
         with open(mqtt.DATA_FILE, 'w') as f:
             json.dump(settings, f) # save to file
+        subscribe()
         raise web.seeother('/')  # Return user to home page.
 
-### valves ###
-def notify_zone_change(name, **kw):
-    names = gv.snames
-    mas = gv.sd['mas']
-    vals = gv.srvals
-    payload = {
-        'zone_list': vals,
-        'zone_dict': {name: status for name, status in zip(names, vals)},
-        'master_on': 0 if mas == 0 else vals[mas]
-    }
-    zone_topic = mqtt.get_settings().get('zone_topic')
-    if zone_topic:
-        client = mqtt.get_client()
-        if client:
-            client.publish(zone_topic, json.dumps(payload), qos=1, retain=True)
+def on_message(client, msg):
+    "Callback when MQTT message is received."
+    
 
-zones = signal('zone_change')
-zones.connect(notify_zone_change)
+def subscribe():
+    "Subscribe to messages"
+    topic = mqtt.get_settings('schedule_topic')
+    if topic:
+        mqtt.subscribe(topic, on_message, 2)
+
+subscribe()
