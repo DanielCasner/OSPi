@@ -13,7 +13,7 @@ from webpages import ProtectedPage  # Needed for security
 from blinker import signal
 import json  # for working with data file
 try:
-    import paho.mqtt as mqtt
+    import paho.mqtt.client as mqtt
 except ImportError:
     print("ERROR: MQTT Plugin requires paho mqtt.")
     print("\ttry: pip install paho-mqtt")
@@ -22,6 +22,11 @@ except ImportError:
 DATA_FILE = "./data/mqtt.json"
 
 _client = None
+_settings = {
+    'broker_host': 'localhost',
+    'broker_port': 1883,
+    'publish_up_down': ''
+}
 
 # Add new URLs to access classes in this plugin.
 urls.extend([
@@ -36,15 +41,7 @@ class settings(ProtectedPage):
     """Load an html page for entering plugin settings.
     """
     def GET(self):
-        try:
-            with open(DATA_FILE, 'r') as f:  # Read settings from json file if it exists
-                settings = json.load(f)
-        except IOError:  # If file does not exist return empty value
-            settings = {
-                'broker_host': 'localhost',
-                'broker_port': 1883,
-                'publish_up_down': ''
-            }  # Default settings. can be list, dictionary, etc.
+        settings = get_settings()
         return template_render.mqtt(settings, gv.sd[u'name'], NO_MQTT_ERROR if mqtt is None else "")  # open settings page
 
 class save_settings(ProtectedPage):
@@ -55,7 +52,7 @@ class save_settings(ProtectedPage):
 
     def GET(self):
         qdict = web.input()  # Dictionary of values returned as query string from settings page.
-        with open(DATA_FILE, 'w') as f:  # Edit: change name of json file
+        with open(DATA_FILE, 'w') as f:
             try:
                 port = int(qdict['broker_port'])
                 assert port > 80 and port < 65535
@@ -64,42 +61,61 @@ class save_settings(ProtectedPage):
                 return template_render.proto(qdict, gv.sd[u'name'], "Broker port must be a valid integer port number")
             else:
                 json.dump(qdict, f) # save to file
+                publish_status()
         raise web.seeother('/')  # Return user to home page.
 
+def get_settings():
+    global _settings
+    try:
+        fh = open(DATA_FILE, 'r')
+        try:
+            _settings = json.load(fh)
+        except ValueError as e:
+            print("MQTT pluging couldn't parse data file:", e)
+        finally:
+            fh.close()
+    except IOError as e:
+        print("MQTT Plugin couldn't open data file:", e)
+    print("MQTT settings:", _settings)
+    return _settings
+
 def get_client():
+    global _client
     if _client is None and mqtt is not None:
         try:
-            with json.load(open(DATA_FILE, 'r')) as settings:
-                try:
-                    _client = mqtt.Client(gv.sd[u'name']) # Use system name as client ID
-                    if settings['publish_up_down']:
-                        _client.will_set(settings['publish_up_down'], json.dumps("DIED"), qos=1, retain=True)
-                    _client.loop_start()
-                    _client.connect(settings['broker_host'], settings['broker_port'])
-                except Exception as e:
-                    print("Could not initalize MQTT client: {}".format(str(e)))
-        except IOError as e:
-            print("MQTT Pluging could not load settings file", str(e))
+            _client = mqtt.Client(gv.sd[u'name']) # Use system name as client ID
+            _client.connect(_settings['broker_host'], _settings['broker_port'])
+            if _settings['publish_up_down']:
+                _client.will_set(_settings['publish_up_down'], json.dumps("DIED"), qos=1, retain=True)
+            _client.loop_start()
+        except Exception as e:
+            print("MQTT plugin couldn't initalize client:", e)
+    else:
+        print(_client, mqtt)
     return _client
+
+def publish_status(status="UP"):
+    if _settings['publish_up_down']:
+        print("MQTT publish", status)
+        client = get_client()
+        if client:
+            client.publish(_settings['publish_up_down'], json.dumps(status), qos=1, retain=True)
+    else:
+        print(_settings['publish_up_down'])
 
 ### Restart ###
 def on_restart(name, **kw):
     if _client is not None:
-        with json.load(open(DATA_FILE, 'r')) as settings:
-            if settings['publish_up_down']:
-                _client.publish(settings['publish_up_down'], json.dumps("DOWN"), qos=1, retain=True)
+        publish_status("DOWN")
         _client.disconnect()
         _client.loop_stop()
         _client = None
 
 restart = signal('restart')
+rebooted = signal('rebooted')
 restart.connect(on_restart)
+rebooted.connect(on_restart)
 
-try:
-    with json.load(open(DATA_FILE, 'r')) as settings:
-        if settings['publish_up_down']:
-            with get_client as c:
-                if c:
-                    c.publish(settings['publish_up_down'], json.dumps("UP"), qos=1, retain=True)
-except IOError as e:
-    pass
+get_settings()
+
+publish_status()
