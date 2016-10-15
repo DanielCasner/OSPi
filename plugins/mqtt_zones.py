@@ -35,6 +35,7 @@ class save_settings(ProtectedPage):
     """
     def GET(self):
         qdict = web.input()  # Dictionary of values returned as query string from settings page.
+        print("MQTT zone save settings:", qdict)
         settings = mqtt.get_settings()
         settings.update(qdict)
         with open(mqtt.DATA_FILE, 'w') as f:
@@ -48,11 +49,11 @@ def notify_zone_change(name, **kw):
     vals = gv.srvals
     payload = {
         'zone_list': vals,
-        'zone_dict': {name: status for name, status in zip(names, vals)}
+        'zone_dict': {name: status for name, status in zip(names, vals)},
         'master_on': 0 if mas == 0 else vals[mas]
     }
     print("MQTT Zones:", payload) #  This shows the state of the zones.
-    zone_topic = mqtt.get_settings.get('zone_topic')
+    zone_topic = mqtt.get_settings().get('zone_topic')
     if zone_topic:
         client = mqtt.get_client()
         if client:
