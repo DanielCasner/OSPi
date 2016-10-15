@@ -1,0 +1,7 @@
+A plugin which adds a shared MQTT client to SIP
+
+##### List all plugin files below preceded by a blank line [file_name.ext path] relative to OSPi directory #####
+
+mqtt_zones.py plugins
+mqtt_zones.html templates
+mqtt_zones.manifest plugins/manifests
