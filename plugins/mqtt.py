@@ -10,8 +10,8 @@ import gv  # Get access to SIP's settings
 from urls import urls  # Get access to SIP's URLs
 from sip import template_render  #  Needed for working with web.py templates
 from webpages import ProtectedPage  # Needed for security
-from blinker import signal
 import json  # for working with data file
+import atexit # For publishing down message
 try:
     import paho.mqtt.client as mqtt
 except ImportError:
@@ -76,7 +76,6 @@ def get_settings():
             fh.close()
     except IOError as e:
         print("MQTT Plugin couldn't open data file:", e)
-    print("MQTT settings:", _settings)
     return _settings
 
 def get_client():
@@ -90,31 +89,25 @@ def get_client():
             _client.loop_start()
         except Exception as e:
             print("MQTT plugin couldn't initalize client:", e)
-    else:
-        print(_client, mqtt)
     return _client
 
 def publish_status(status="UP"):
+    global _settings
     if _settings['publish_up_down']:
         print("MQTT publish", status)
         client = get_client()
         if client:
             client.publish(_settings['publish_up_down'], json.dumps(status), qos=1, retain=True)
-    else:
-        print(_settings['publish_up_down'])
 
-### Restart ###
-def on_restart(name, **kw):
+def on_restart():
+    global _client
     if _client is not None:
         publish_status("DOWN")
         _client.disconnect()
         _client.loop_stop()
         _client = None
 
-restart = signal('restart')
-rebooted = signal('rebooted')
-restart.connect(on_restart)
-rebooted.connect(on_restart)
+atexit.register(on_restart)
 
 get_settings()
 
