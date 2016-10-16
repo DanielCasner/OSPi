@@ -49,7 +49,7 @@ def notify_zone_change(name, **kw):
     payload = {
         'zone_list': vals,
         'zone_dict': {name: status for name, status in zip(names, vals)},
-        'master_on': 0 if mas == 0 else vals[mas]
+        'master_on': 0 if mas == 0 else vals[mas-1]
     }
     zone_topic = mqtt.get_settings().get('zone_topic')
     if zone_topic:
