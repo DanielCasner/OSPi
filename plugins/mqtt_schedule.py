@@ -26,7 +26,7 @@ class settings(ProtectedPage):
     def GET(self):
         settings = mqtt.get_settings()
         zone_topic = settings.get('schedule_topic', gv.sd[u'name'] + '/schedule')
-        return template_render.mqtt_zones(zone_topic, "")  # open settings page
+        return template_render.mqtt_schedule(zone_topic, "")  # open settings page
 
 class save_settings(ProtectedPage):
     """Save user input to json file.
@@ -86,7 +86,7 @@ def on_message(client, msg):
 
 def subscribe():
     "Subscribe to messages"
-    topic = mqtt.get_settings('schedule_topic')
+    topic = mqtt.get_settings().get('schedule_topic')
     if topic:
         mqtt.subscribe(topic, on_message, 2)
 

@@ -57,7 +57,9 @@ class save_settings(ProtectedPage):
             try:
                 port = int(qdict['broker_port'])
                 assert port > 80 and port < 65535
-                qdict['broker_port'] = port
+                _settings['broker_port'] = port
+                _settings['broker_host'] = qdict['broker_host']
+                _settings['publish_up_down'] = qdict['publish_up_down']
             except:
                 return template_render.proto(qdict, gv.sd[u'name'], "Broker port must be a valid integer port number")
             else:
