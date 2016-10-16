@@ -44,7 +44,45 @@ class save_settings(ProtectedPage):
 
 def on_message(client, msg):
     "Callback when MQTT message is received."
-    
+    if not gv.sd['en']: # check operation status
+        return
+    num_brds = gv.sd['nbrd']
+    num_sta  = num_brds * 8
+    cmd = json.loads(msg.payload)
+    if type(cmd) is list:
+        if len(cmd) < num_sta:
+            print("MQTT schedule, not enough stations specified, assuming first {} of {}".format(len(cmd), num_sta))
+            gv.rovals = cmd + ([0] * (num_sta - len(cmd)))
+        elif len(cmd) > num_sta:
+            print("MQTT schedule, too many stations specified, truncating to {}".format(num_sta))
+            gv.rovals = cmd[0:num_sta]
+        else:
+            gv.rovals = cmd
+    elif type(cmd) is dict:
+        rovals = [0] * num_sta
+        for k, v in cmd.items():
+            if k not in gv.snames:
+                print("MQTT schedule, no station named:", k)
+            else:
+                rovals[gv.names.index(k)] = v
+        gv.rovals = rovals
+    else:
+        print("MQTT schedule unexpected command: ", msg.payload)
+    stations = [0] * num_brds
+    gv.ps = []  # program schedule (for display)
+    gv.rs = []  # run schedule
+    for i in range(num_brds):
+        gv.ps.append([0, 0])
+        gv.rs.append([0, 0, 0, 0])
+    for i, v in enumerate(gv.rovals):
+        if v:  # if this element has a value
+            gv.rs[i][0] = gv.now
+            gv.rs[i][2] = v
+            gv.rs[i][3] = 98
+            gv.ps[i][0] = 98
+            gv.ps[i][1] = v
+            stations[i / 8] += 2 ** (i % 8)
+    schedule_stations(stations)
 
 def subscribe():
     "Subscribe to messages"
