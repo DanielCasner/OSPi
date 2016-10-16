@@ -10,6 +10,7 @@ from urls import urls  # Get access to SIP's URLs
 from sip import template_render  #  Needed for working with web.py templates
 from webpages import ProtectedPage  # Needed for security
 from blinker import signal # To receive station notifications
+from helpers import schedule_stations
 import json  # for working with data file
 from plugins import mqtt
 
@@ -48,41 +49,48 @@ def on_message(client, msg):
         return
     num_brds = gv.sd['nbrd']
     num_sta  = num_brds * 8
-    cmd = json.loads(msg.payload)
+    try:
+        cmd = json.loads(msg.payload)
+    except ValueError as e:
+        print("MQTT Schedule could not decode command: ", msg.payload, e)
+        return
     if type(cmd) is list:
         if len(cmd) < num_sta:
             print("MQTT schedule, not enough stations specified, assuming first {} of {}".format(len(cmd), num_sta))
-            gv.rovals = cmd + ([0] * (num_sta - len(cmd)))
+            rovals = cmd + ([0] * (num_sta - len(cmd)))
         elif len(cmd) > num_sta:
             print("MQTT schedule, too many stations specified, truncating to {}".format(num_sta))
-            gv.rovals = cmd[0:num_sta]
+            rovals = cmd[0:num_sta]
         else:
-            gv.rovals = cmd
+            rovals = cmd
     elif type(cmd) is dict:
         rovals = [0] * num_sta
         for k, v in cmd.items():
             if k not in gv.snames:
                 print("MQTT schedule, no station named:", k)
             else:
-                rovals[gv.names.index(k)] = v
-        gv.rovals = rovals
+                rovals[gv.snames.index(k)] = v
     else:
         print("MQTT schedule unexpected command: ", msg.payload)
-    stations = [0] * num_brds
-    gv.ps = []  # program schedule (for display)
-    gv.rs = []  # run schedule
-    for i in range(num_brds):
-        gv.ps.append([0, 0])
-        gv.rs.append([0, 0, 0, 0])
-    for i, v in enumerate(gv.rovals):
-        if v:  # if this element has a value
-            gv.rs[i][0] = gv.now
-            gv.rs[i][2] = v
-            gv.rs[i][3] = 98
-            gv.ps[i][0] = 98
-            gv.ps[i][1] = v
-            stations[i / 8] += 2 ** (i % 8)
-    schedule_stations(stations)
+        return
+    if any(rovals):
+        print("MQTT schedule:", rovals)
+        gv.rovals = rovals
+        stations = [0] * num_brds
+        gv.ps = []  # program schedule (for display)
+        gv.rs = []  # run schedule
+        for i in range(gv.sd['nst']):
+            gv.ps.append([0, 0])
+            gv.rs.append([0, 0, 0, 0])
+        for i, v in enumerate(gv.rovals):
+            if v:  # if this element has a value
+                gv.rs[i][0] = gv.now
+                gv.rs[i][2] = v
+                gv.rs[i][3] = 98
+                gv.ps[i][0] = 98
+                gv.ps[i][1] = v
+                stations[i / 8] += 2 ** (i % 8)
+        schedule_stations(stations)
 
 def subscribe():
     "Subscribe to messages"
