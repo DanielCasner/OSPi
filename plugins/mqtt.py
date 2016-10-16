@@ -63,7 +63,7 @@ class save_settings(ProtectedPage):
             except:
                 return template_render.proto(qdict, gv.sd[u'name'], "Broker port must be a valid integer port number")
             else:
-                json.dump(qdict, f) # save to file
+                json.dump(_settings, f) # save to file
                 publish_status()
         raise web.seeother('/')  # Return user to home page.
 
